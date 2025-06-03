@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Moon, Sun, Network, Layers, Info, BookOpen, Clock } from "lucide-react"
 
-interface IPv4Field {
+interface IPv6Field {
   name: string
   bits: string
   description: string
@@ -20,103 +20,77 @@ interface OSILayer {
   name: string
   description: string
   protocols: string[]
-  isIPv4Layer?: boolean
+  isIPv6Layer?: boolean
 }
 
-const ipv4Fields: IPv4Field[] = [
+const ipv6Fields: IPv6Field[] = [
   {
     name: "Version",
     bits: "4 bits",
     description: "IP version number",
-    purpose: "Identifies the IP version being used. For IPv4, this value is always 4.",
-    example: "0100 (binary) = 4 (decimal)",
+    purpose: "Identifies the IP version being used. For IPv6, this value is always 6.",
+    example: "0110 (binary) = 6 (decimal)",
   },
   {
-    name: "IHL",
-    bits: "4 bits",
-    description: "Internet Header Length",
-    purpose:
-      "Specifies the length of the IP header in 32-bit words (4-byte units). Minimum value is 5 (20 bytes) for a header with no options. Maximum is 15 (60 bytes).",
-    example: "5 = 20 bytes (no options), 8 = 32 bytes (12 bytes of options)",
-  },
-  {
-    name: "Type of Service",
+    name: "Traffic Class",
     bits: "8 bits",
-    description: "Type of Service (DSCP + ECN)",
+    description: "Quality of Service (QoS) marking",
     purpose:
-      "Defines how the packet should be handled in terms of priority, delay, throughput, and reliability. First 6 bits are DSCP, last 2 bits are ECN.",
+      "Similar to the Type of Service field in IPv4. Used for packet prioritization and congestion control. First 6 bits are DSCP, last 2 bits are ECN.",
     example: "00000000 = Normal service, 10111000 = Expedited Forwarding",
   },
   {
-    name: "Total Length",
+    name: "Flow Label",
+    bits: "20 bits",
+    description: "Packet flow identification",
+    purpose:
+      "Identifies packets that belong to the same flow, allowing routers to process related packets together. Helps with quality of service and real-time data.",
+    example: "0x12345 (20-bit value)",
+  },
+  {
+    name: "Payload Length",
     bits: "16 bits",
-    description: "Total packet length",
-    purpose: "Specifies the total length of the IP packet (header + data) in bytes. Maximum is 65,535 bytes.",
-    example: "1500 bytes for standard Ethernet frame",
+    description: "Length of payload",
+    purpose:
+      "Specifies the length of the payload (data after the IPv6 header) in bytes. Does not include the header itself.",
+    example: "1440 bytes for a typical payload",
   },
   {
-    name: "Identification",
-    bits: "16 bits",
-    description: "Unique packet identifier",
-    purpose: "Uniquely identifies fragments of an original IP packet. All fragments have the same ID.",
-    example: "12345 (decimal)",
+    name: "Next Header",
+    bits: "8 bits",
+    description: "Next header type",
+    purpose: "Identifies the type of header immediately following the IPv6 header (TCP=6, UDP=17, ICMPv6=58).",
+    example: "6 = TCP, 17 = UDP, 58 = ICMPv6",
   },
   {
-    name: "Flags",
-    bits: "3 bits",
-    description: "Control fragmentation",
-    purpose: "Controls packet fragmentation: Reserved bit (must be 0), Don't Fragment (DF), More Fragments (MF).",
-    example: "010 = Don't Fragment set",
-  },
-  {
-    name: "Fragment Offset",
-    bits: "13 bits",
-    description: "Fragment position",
-    purpose: "Indicates where this fragment belongs in the original packet, measured in 8-byte units.",
-    example: "0 for first fragment",
-  },
-  {
-    name: "Time to Live",
+    name: "Hop Limit",
     bits: "8 bits",
     description: "Maximum hops allowed",
-    purpose: "Prevents infinite routing loops by limiting packet lifetime. Decremented at each hop.",
+    purpose:
+      "Prevents infinite routing loops by limiting packet lifetime. Decremented at each hop, similar to TTL in IPv4.",
     example: "64 hops (common default)",
   },
   {
-    name: "Protocol",
-    bits: "8 bits",
-    description: "Next layer protocol",
-    purpose: "Identifies the protocol used in the data portion (TCP=6, UDP=17, ICMP=1).",
-    example: "6 = TCP, 17 = UDP",
+    name: "Source Address",
+    bits: "128 bits",
+    description: "Sender's IPv6 address",
+    purpose: "The IPv6 address of the device sending the packet. Four times larger than IPv4 addresses.",
+    example: "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
   },
   {
-    name: "Header Checksum",
-    bits: "16 bits",
-    description: "Error detection",
-    purpose: "Provides error detection for the header only. Recalculated at each hop due to TTL changes.",
-    example: "Calculated using one's complement",
+    name: "Destination Address",
+    bits: "128 bits",
+    description: "Receiver's IPv6 address",
+    purpose: "The IPv6 address of the device that should receive the packet. Four times larger than IPv4 addresses.",
+    example: "2001:4860:4860::8888 (Google's public DNS)",
   },
   {
-    name: "Source IP Address",
-    bits: "32 bits",
-    description: "Sender's IP address",
-    purpose: "The IP address of the device sending the packet.",
-    example: "192.168.1.100",
-  },
-  {
-    name: "Destination IP Address",
-    bits: "32 bits",
-    description: "Receiver's IP address",
-    purpose: "The IP address of the device that should receive the packet.",
-    example: "8.8.8.8",
-  },
-  {
-    name: "Options",
-    bits: "0-40 bytes",
-    description: "Optional header fields with padding",
+    name: "Extension Headers",
+    bits: "Variable",
+    description: "Optional headers for special handling",
     purpose:
-      "Variable-length field for additional IP options like source routing, timestamps, or security. Must be padded to ensure the header length is a multiple of 32 bits.",
-    example: "Usually empty in most packets. When present, often includes padding to align to 32-bit boundary.",
+      "IPv6 uses extension headers instead of the options field in IPv4. These are placed between the IPv6 header and the upper-layer header. Common types include Hop-by-Hop Options, Routing, Fragment, Destination Options, Authentication, and Encapsulating Security Payload.",
+    example: "Hop-by-Hop Options header (Next Header value = 0), Routing header (Next Header value = 43)",
   },
 ]
 
@@ -149,8 +123,8 @@ const osiLayers: OSILayer[] = [
     number: 3,
     name: "Network Layer",
     description: "Routing, logical addressing",
-    protocols: ["IPv4", "IPv6", "ICMP", "OSPF"],
-    isIPv4Layer: true,
+    protocols: ["IPv6", "IPv4", "ICMPv6", "OSPF"],
+    isIPv6Layer: true,
   },
   {
     number: 2,
@@ -166,7 +140,7 @@ const osiLayers: OSILayer[] = [
   },
 ]
 
-export default function IPv4OSIApp() {
+export default function IPv6OSIApp() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [hoveredField, setHoveredField] = useState<string | null>(null)
   const [hoveredLayer, setHoveredLayer] = useState<number | null>(null)
@@ -187,7 +161,7 @@ export default function IPv4OSIApp() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Network className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold">IPv4 & OSI Model Explorer</h1>
+              <h1 className="text-2xl font-bold">IPv6 & OSI Model Explorer</h1>
             </div>
             <div className="flex-1 flex justify-center">
               <a
@@ -210,7 +184,7 @@ export default function IPv4OSIApp() {
         <Tabs defaultValue="story" className="space-y-8">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="story">The Story</TabsTrigger>
-            <TabsTrigger value="ipv4-header">IPv4 Header</TabsTrigger>
+            <TabsTrigger value="ipv6-header">IPv6 Header</TabsTrigger>
             <TabsTrigger value="osi-model">OSI Model</TabsTrigger>
             <TabsTrigger value="integration">Integration</TabsTrigger>
           </TabsList>
@@ -221,7 +195,7 @@ export default function IPv4OSIApp() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <BookOpen className="h-6 w-6" />
-                  <span>The Birth of IPv4: A Story of Innovation</span>
+                  <span>The Birth of IPv6: A Story of Evolution</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -229,66 +203,72 @@ export default function IPv4OSIApp() {
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center space-x-2 mb-4">
                       <Clock className="h-5 w-5 text-blue-600" />
-                      <span className="text-sm font-semibold text-blue-600">1970s - The Dawn of Internetworking</span>
+                      <span className="text-sm font-semibold text-blue-600">
+                        1990s - The Need for a New Internet Protocol
+                      </span>
                     </div>
                     <p className="text-sm leading-relaxed">
-                      In the early 1970s, computer networks were isolated islands. ARPANET connected a few universities,
-                      but there was no way for different networks to communicate with each other. The challenge was
-                      immense: how do you create a universal addressing system that could work across any type of
-                      network?
+                      By the early 1990s, the explosive growth of the internet made it clear that the 4.3 billion
+                      addresses provided by IPv4 would eventually be exhausted. The Internet Engineering Task Force
+                      (IETF) recognized this impending crisis and began work on a next-generation Internet Protocol that
+                      would solve the address shortage and other limitations of IPv4.
                     </p>
                   </div>
 
-                  <h3>The Problem: Connecting the Unconnectable</h3>
+                  <h3>The Problem: Preparing for Internet Growth</h3>
                   <p>
-                    Imagine you're Vint Cerf and Bob Kahn in 1973, tasked with solving an impossible puzzle. You have:
+                    Imagine you're Steve Deering and Robert Hinden in 1994, tasked with designing the future of the
+                    internet. You face several challenges:
                   </p>
                   <ul>
                     <li>
-                      <strong>Different network technologies:</strong> Ethernet, radio networks, satellite links
+                      <strong>Address exhaustion:</strong> IPv4's 32-bit address space was rapidly running out
                     </li>
                     <li>
-                      <strong>Varying packet sizes:</strong> Some networks could handle large packets, others couldn't
+                      <strong>Routing table explosion:</strong> The growth of the internet was causing routing tables to
+                      become unmanageably large
                     </li>
                     <li>
-                      <strong>Unreliable connections:</strong> Packets could get lost, duplicated, or arrive out of
-                      order
+                      <strong>Configuration complexity:</strong> Manual configuration of network devices was becoming a
+                      bottleneck
                     </li>
                     <li>
-                      <strong>No central authority:</strong> No single entity could control all networks
+                      <strong>Security concerns:</strong> IPv4 was designed without built-in security
                     </li>
                   </ul>
 
                   <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">The "Aha!" Moment</h4>
                     <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                      The breakthrough came with the realization that they needed a <strong>universal envelope</strong>{" "}
-                      - a standardized header that could carry any type of data across any type of network. This
-                      envelope would contain all the information needed to route data from any point A to any point B on
-                      the planet.
+                      The breakthrough came with the realization that they needed to{" "}
+                      <strong>completely reimagine</strong> the Internet Protocol. Rather than just extending IPv4, they
+                      would create a new protocol that would address all of its limitations while maintaining
+                      compatibility with existing internet architecture. The most visible change would be expanding the
+                      address space from 32 bits to 128 bits, providing an almost limitless number of unique addresses.
                     </p>
                   </div>
 
-                  <h3>Designing the Perfect Header: Every Bit Counts</h3>
+                  <h3>Designing the Perfect Header: Simplicity and Efficiency</h3>
                   <p>
-                    The IPv4 header wasn't designed in a day. Each field was carefully crafted to solve specific
-                    problems:
+                    The IPv6 header was designed with simplicity and efficiency in mind. Unlike IPv4's complex header
+                    with many fields, IPv6 has a streamlined header with fewer fields:
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
                     <Card className="border-blue-200 dark:border-blue-800">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-blue-600 dark:text-blue-400">
-                          The Addressing Challenge
+                          The Addressing Revolution
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-sm">
                         <p>
-                          <strong>Problem:</strong> How do you uniquely identify every computer on Earth?
+                          <strong>Problem:</strong> How do you ensure we never run out of addresses again?
                         </p>
                         <p>
-                          <strong>Solution:</strong> 32-bit addresses (Source & Destination IP) - enough for 4.3 billion
-                          unique addresses. In 1981, this seemed infinite!
+                          <strong>Solution:</strong> 128-bit addresses (Source & Destination IP) - enough for 340
+                          undecillion unique addresses. That's 340 trillion trillion trillion addresses, or
+                          approximately 667 quadrillion addresses per square millimeter of the Earth's surface!
                         </p>
                       </CardContent>
                     </Card>
@@ -296,16 +276,17 @@ export default function IPv4OSIApp() {
                     <Card className="border-green-200 dark:border-green-800">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-green-600 dark:text-green-400">
-                          The Fragmentation Dilemma
+                          The Extension Header Innovation
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-sm">
                         <p>
-                          <strong>Problem:</strong> Different networks had different maximum packet sizes.
+                          <strong>Problem:</strong> How do you maintain flexibility without complicating the base
+                          header?
                         </p>
                         <p>
-                          <strong>Solution:</strong> Identification, Flags, and Fragment Offset fields - allowing large
-                          packets to be split and reassembled seamlessly.
+                          <strong>Solution:</strong> Extension headers - a modular approach that keeps the main header
+                          simple while allowing for additional functionality through optional extension headers.
                         </p>
                       </CardContent>
                     </Card>
@@ -313,16 +294,17 @@ export default function IPv4OSIApp() {
                     <Card className="border-red-200 dark:border-red-800">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-red-600 dark:text-red-400">
-                          The Loop Prevention Problem
+                          The Performance Enhancement
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-sm">
                         <p>
-                          <strong>Problem:</strong> What if packets get stuck in routing loops forever?
+                          <strong>Problem:</strong> How do you make routing more efficient?
                         </p>
                         <p>
-                          <strong>Solution:</strong> Time to Live (TTL) field - each router decrements this value, and
-                          when it reaches zero, the packet is discarded.
+                          <strong>Solution:</strong> Simplified header format with fewer fields, aligned on 64-bit
+                          boundaries for faster processing. Routers no longer need to recalculate checksums at each hop,
+                          significantly improving performance.
                         </p>
                       </CardContent>
                     </Card>
@@ -330,16 +312,17 @@ export default function IPv4OSIApp() {
                     <Card className="border-purple-200 dark:border-purple-800">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-purple-600 dark:text-purple-400">
-                          The Protocol Multiplexing Need
+                          The Flow Labeling Innovation
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-sm">
                         <p>
-                          <strong>Problem:</strong> How does the receiving computer know what type of data is inside?
+                          <strong>Problem:</strong> How do you handle real-time traffic more effectively?
                         </p>
                         <p>
-                          <strong>Solution:</strong> Protocol field - a simple number that identifies whether the
-                          payload is TCP, UDP, ICMP, or something else.
+                          <strong>Solution:</strong> Flow Label field - a new concept that allows routers to identify
+                          packets belonging to the same "flow" or connection, enabling more efficient handling of
+                          real-time applications like voice and video.
                         </p>
                       </CardContent>
                     </Card>
@@ -347,90 +330,90 @@ export default function IPv4OSIApp() {
 
                   <h3>The Genius of Simplicity</h3>
                   <p>
-                    What makes the IPv4 header brilliant isn't its complexity - it's its elegant simplicity. Consider
-                    these design decisions:
+                    What makes the IPv6 header brilliant is its elegant simplicity compared to IPv4. Consider these
+                    design decisions:
                   </p>
 
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                       <div>
-                        <strong>Fixed 32-bit alignment:</strong> Every row in the header is exactly 32 bits wide, making
-                        it easy for computers to process efficiently.
+                        <strong>Fixed header size:</strong> Unlike IPv4's variable-length header, IPv6 has a fixed
+                        40-byte header, making processing more predictable and efficient.
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
                       <div>
-                        <strong>Variable header length:</strong> The IHL field allows for optional fields while keeping
-                        most headers compact at just 20 bytes.
+                        <strong>No header checksum:</strong> IPv6 eliminates the header checksum field, reducing
+                        processing overhead since checksums are already handled at other layers.
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
                       <div>
-                        <strong>Future-proofing:</strong> The Version field allows for future IP versions (like IPv6)
-                        while maintaining backward compatibility.
+                        <strong>No fragmentation at routers:</strong> IPv6 requires hosts to perform Path MTU Discovery
+                        to avoid fragmentation, improving network efficiency.
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
                       <div>
-                        <strong>Error detection:</strong> The Header Checksum ensures that routing information isn't
-                        corrupted during transmission.
+                        <strong>Built-in extensibility:</strong> The Next Header field allows for a chain of extension
+                        headers, providing flexibility without complicating the base header.
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-green-50 dark:bg-green-950 p-6 rounded-lg border border-green-200 dark:border-green-800 mt-6">
                     <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3">
-                      The Legacy: 50+ Years and Counting
+                      The Legacy: The Future of Internet Addressing
                     </h4>
                     <p className="text-green-700 dark:text-green-300 text-sm leading-relaxed">
-                      Published as RFC 791 in September 1981, the IPv4 header design has remained virtually unchanged
-                      for over 40 years. It has successfully routed trillions of packets across billions of devices,
-                      enabling the global internet as we know it today. The fact that a protocol designed when the
-                      entire internet had fewer than 1,000 computers still powers our modern world of smartphones, IoT
-                      devices, and cloud computing is a testament to the brilliance of its original design.
+                      Published as RFC 2460 in December 1998 and updated by RFC 8200 in July 2017, IPv6 represents the
+                      future of internet addressing. While adoption has been slower than initially hoped, IPv6
+                      deployment continues to grow worldwide. As of 2023, global IPv6 adoption has reached over 40%
+                      according to Google statistics. The transition to IPv6 is inevitable as the internet continues to
+                      grow, especially with the explosion of IoT devices that require unique IP addresses.
                     </p>
                   </div>
 
                   <h3>What's Next?</h3>
                   <p>
-                    Now that you understand the story behind IPv4, let's explore the header structure in detail. Each
-                    field you'll see was carefully designed to solve real problems that the internet's pioneers faced.
-                    As you hover over each field in the interactive diagram, remember: you're not just looking at bits
-                    and bytes - you're seeing the DNA of the modern internet.
+                    Now that you understand the story behind IPv6, let's explore the header structure in detail. Each
+                    field you'll see was carefully designed to address the limitations of IPv4 while preparing the
+                    internet for exponential growth. As you hover over each field in the interactive diagram, remember:
+                    you're not just looking at bits and bytes - you're seeing the blueprint for the next generation of
+                    the internet.
                   </p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* IPv4 Header Tab */}
-          <TabsContent value="ipv4-header" className="space-y-6">
+          {/* IPv6 Header Tab */}
+          <TabsContent value="ipv6-header" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Network className="h-6 w-6" />
-                  <span>IPv4 Header Structure</span>
+                  <span>IPv6 Header Structure</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* IPv4 Header Visualization */}
-                  {/* IPv4 Header Visualization - Simplified */}
+                  {/* IPv6 Header Visualization */}
                   <div className="lg:col-span-2">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-blue-200 dark:border-blue-700">
                       <div className="text-center mb-6">
-                        <h3 className="text-lg font-semibold">IPv4 Packet Header</h3>
+                        <h3 className="text-lg font-semibold">IPv6 Packet Header</h3>
                         <p className="text-sm text-muted-foreground">Click on any field to learn more</p>
-                        <div className="text-xs text-gray-500 mt-2">20 bytes minimum • 60 bytes maximum</div>
+                        <div className="text-xs text-gray-500 mt-2">40 bytes fixed size</div>
                       </div>
 
                       {/* Simplified Header Visualization */}
                       <div className="space-y-2">
-                        {/* Row 1: Version, IHL, ToS, Total Length */}
+                        {/* Row 1: Version, Traffic Class, Flow Label */}
                         <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
                           <div
                             className="flex-none w-16 bg-blue-200 dark:bg-blue-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-blue-300 dark:hover:bg-blue-700 transition-colors"
@@ -443,145 +426,105 @@ export default function IPv4OSIApp() {
                             </div>
                           </div>
                           <div
-                            className="flex-none w-16 bg-green-200 dark:bg-green-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-green-300 dark:hover:bg-green-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("IHL")}
+                            className="flex-none w-24 bg-green-200 dark:bg-green-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-green-300 dark:hover:bg-green-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Traffic Class")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-xs font-semibold">IHL</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">4b</div>
+                              <div className="text-xs font-semibold">Traffic Class</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">8b</div>
                             </div>
                           </div>
                           <div
-                            className="flex-none w-24 bg-yellow-200 dark:bg-yellow-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-yellow-300 dark:hover:bg-yellow-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Type of Service")}
+                            className="flex-1 bg-yellow-200 dark:bg-yellow-800 flex items-center justify-center cursor-pointer hover:bg-yellow-300 dark:hover:bg-yellow-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Flow Label")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-xs font-semibold">Type of Service</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">8 bits</div>
-                            </div>
-                          </div>
-                          <div
-                            className="flex-1 bg-purple-200 dark:bg-purple-800 flex items-center justify-center cursor-pointer hover:bg-purple-300 dark:hover:bg-purple-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Total Length")}
-                            onMouseLeave={() => setHoveredField(null)}
-                          >
-                            <div className="text-center">
-                              <div className="text-xs font-semibold">Total Length</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">16 bits</div>
+                              <div className="text-xs font-semibold">Flow Label</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">20 bits</div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Row 2: Identification, Flags, Fragment Offset */}
+                        {/* Row 2: Payload Length, Next Header, Hop Limit */}
                         <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
                           <div
-                            className="flex-1 bg-red-200 dark:bg-red-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-red-300 dark:hover:bg-red-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Identification")}
+                            className="flex-1 bg-purple-200 dark:bg-purple-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-purple-300 dark:hover:bg-purple-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Payload Length")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-xs font-semibold">Identification</div>
+                              <div className="text-xs font-semibold">Payload Length</div>
                               <div className="text-xs text-gray-600 dark:text-gray-300">16 bits</div>
-                            </div>
-                          </div>
-                          <div
-                            className="flex-none w-20 bg-indigo-200 dark:bg-indigo-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-indigo-300 dark:hover:bg-indigo-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Flags")}
-                            onMouseLeave={() => setHoveredField(null)}
-                          >
-                            <div className="text-center">
-                              <div className="text-xs font-semibold">Flags</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">3b</div>
-                            </div>
-                          </div>
-                          <div
-                            className="flex-1 bg-pink-200 dark:bg-pink-800 flex items-center justify-center cursor-pointer hover:bg-pink-300 dark:hover:bg-pink-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Fragment Offset")}
-                            onMouseLeave={() => setHoveredField(null)}
-                          >
-                            <div className="text-center">
-                              <div className="text-xs font-semibold">Fragment Offset</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">13 bits</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Row 3: TTL, Protocol, Header Checksum */}
-                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
-                          <div
-                            className="flex-none w-24 bg-teal-200 dark:bg-teal-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-teal-300 dark:hover:bg-teal-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Time to Live")}
-                            onMouseLeave={() => setHoveredField(null)}
-                          >
-                            <div className="text-center">
-                              <div className="text-xs font-semibold">TTL</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">8 bits</div>
                             </div>
                           </div>
                           <div
                             className="flex-none w-24 bg-orange-200 dark:bg-orange-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Protocol")}
+                            onMouseEnter={() => setHoveredField("Next Header")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-xs font-semibold">Protocol</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">8 bits</div>
+                              <div className="text-xs font-semibold">Next Header</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">8b</div>
                             </div>
                           </div>
                           <div
-                            className="flex-1 bg-cyan-200 dark:bg-cyan-800 flex items-center justify-center cursor-pointer hover:bg-cyan-300 dark:hover:bg-cyan-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Header Checksum")}
+                            className="flex-none w-24 bg-teal-200 dark:bg-teal-800 flex items-center justify-center cursor-pointer hover:bg-teal-300 dark:hover:bg-teal-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Hop Limit")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-xs font-semibold">Header Checksum</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">16 bits</div>
+                              <div className="text-xs font-semibold">Hop Limit</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">8b</div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Row 4: Source IP Address */}
-                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                        {/* Row 3-6: Source Address (128 bits) */}
+                        <div className="flex h-16 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
                           <div
                             className="w-full bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center cursor-pointer hover:bg-emerald-300 dark:hover:bg-emerald-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Source IP Address")}
+                            onMouseEnter={() => setHoveredField("Source Address")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-sm font-semibold">Source IP Address</div>
+                              <div className="text-sm font-semibold">Source Address</div>
                               <div className="text-xs text-gray-600 dark:text-gray-300">
-                                32 bits • Example: 192.168.1.100
+                                128 bits • Example: 2001:0db8:85a3:0000:0000:8a2e:0370:7334
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Row 5: Destination IP Address */}
-                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                        {/* Row 7-10: Destination Address (128 bits) */}
+                        <div className="flex h-16 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
                           <div
                             className="w-full bg-violet-200 dark:bg-violet-800 flex items-center justify-center cursor-pointer hover:bg-violet-300 dark:hover:bg-violet-700 transition-colors"
-                            onMouseEnter={() => setHoveredField("Destination IP Address")}
+                            onMouseEnter={() => setHoveredField("Destination Address")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-sm font-semibold">Destination IP Address</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-300">32 bits • Example: 8.8.8.8</div>
+                              <div className="text-sm font-semibold">Destination Address</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">
+                                128 bits • Example: 2001:4860:4860::8888
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Row 6: Options (Optional) */}
+                        {/* Extension Headers (Optional) */}
                         <div className="flex h-10 rounded-md overflow-hidden border-2 border-dashed border-gray-400 dark:border-gray-500 opacity-75">
                           <div
                             className="w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                            onMouseEnter={() => setHoveredField("Options")}
+                            onMouseEnter={() => setHoveredField("Extension Headers")}
                             onMouseLeave={() => setHoveredField(null)}
                           >
                             <div className="text-center">
-                              <div className="text-xs font-semibold">Options + Padding (Optional)</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">0-40 bytes • Rarely used</div>
+                              <div className="text-xs font-semibold">Extension Headers (Optional)</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                                Variable length • Hop-by-Hop, Routing, Fragment, etc.
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -600,11 +543,11 @@ export default function IPv4OSIApp() {
                               <span>Addressing</span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <div className="w-3 h-3 bg-red-200 dark:bg-red-800 rounded"></div>
-                              <span>Fragmentation</span>
+                              <div className="w-3 h-3 bg-yellow-200 dark:bg-yellow-800 rounded"></div>
+                              <span>Flow Control</span>
                             </div>
                           </div>
-                          <div className="text-xs">Total: 20-60 bytes</div>
+                          <div className="text-xs">Total: 40 bytes fixed</div>
                         </div>
                       </div>
                     </div>
@@ -614,7 +557,7 @@ export default function IPv4OSIApp() {
                   <div className="lg:col-span-1">
                     <div className="space-y-3 max-h-[600px] overflow-y-auto">
                       <h3 className="text-lg font-semibold mb-4">Field Explanations</h3>
-                      {ipv4Fields.map((field) => (
+                      {ipv6Fields.map((field) => (
                         <Card
                           key={field.name}
                           className={`transition-all duration-200 ${
@@ -691,7 +634,7 @@ export default function IPv4OSIApp() {
                       <div
                         key={layer.number}
                         className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                          layer.isIPv4Layer
+                          layer.isIPv6Layer
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                             : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                         } ${hoveredLayer === layer.number ? "scale-105 shadow-lg" : ""}`}
@@ -700,7 +643,7 @@ export default function IPv4OSIApp() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <Badge variant={layer.isIPv4Layer ? "default" : "secondary"} className="text-lg px-3 py-1">
+                            <Badge variant={layer.isIPv6Layer ? "default" : "secondary"} className="text-lg px-3 py-1">
                               {layer.number}
                             </Badge>
                             <div>
@@ -708,9 +651,9 @@ export default function IPv4OSIApp() {
                               <p className="text-sm text-muted-foreground">{layer.description}</p>
                             </div>
                           </div>
-                          {layer.isIPv4Layer && (
+                          {layer.isIPv6Layer && (
                             <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900">
-                              IPv4 Layer
+                              IPv6 Layer
                             </Badge>
                           )}
                         </div>
@@ -720,7 +663,7 @@ export default function IPv4OSIApp() {
                             <Badge
                               key={protocol}
                               variant="outline"
-                              className={protocol === "IPv4" ? "bg-blue-100 dark:bg-blue-900 border-blue-300" : ""}
+                              className={protocol === "IPv6" ? "bg-blue-100 dark:bg-blue-900 border-blue-300" : ""}
                             >
                               {protocol}
                             </Badge>
@@ -741,7 +684,7 @@ export default function IPv4OSIApp() {
                 <CardTitle className="flex items-center space-x-2">
                   <Info className="h-6 w-6" />
                   <span>
-                    IPv4 Integration with{" "}
+                    IPv6 Integration with{" "}
                     <a
                       href="https://osimodel.subnetting.online"
                       target="_blank"
@@ -756,7 +699,7 @@ export default function IPv4OSIApp() {
               <CardContent className="space-y-6">
                 <div className="prose dark:prose-invert max-w-none">
                   <h3>
-                    How IPv4 Fits into the{" "}
+                    How IPv6 Fits into the{" "}
                     <a
                       href="https://osimodel.subnetting.online"
                       target="_blank"
@@ -767,7 +710,7 @@ export default function IPv4OSIApp() {
                     </a>
                   </h3>
                   <p>
-                    IPv4 operates at <strong>Layer 3 (Network Layer)</strong> of the{" "}
+                    IPv6 operates at <strong>Layer 3 (Network Layer)</strong> of the{" "}
                     <a
                       href="https://osimodel.subnetting.online"
                       target="_blank"
@@ -780,11 +723,11 @@ export default function IPv4OSIApp() {
                     networks.
                   </p>
 
-                  <h4>Key Functions of IPv4 at Layer 3:</h4>
+                  <h4>Key Functions of IPv6 at Layer 3:</h4>
                   <ul>
                     <li>
-                      <strong>Logical Addressing:</strong> IPv4 provides unique 32-bit addresses to identify devices on
-                      a network
+                      <strong>Logical Addressing:</strong> IPv6 provides unique 128-bit addresses to identify devices on
+                      a network, a vast improvement over IPv4's 32-bit addresses
                     </li>
                     <li>
                       <strong>Routing:</strong> Determines the best path for data to travel from source to destination
@@ -793,7 +736,8 @@ export default function IPv4OSIApp() {
                       <strong>Packet Forwarding:</strong> Forwards packets between different network segments
                     </li>
                     <li>
-                      <strong>Fragmentation:</strong> Breaks large packets into smaller fragments when necessary
+                      <strong>Flow Labeling:</strong> Identifies packets belonging to the same flow for more efficient
+                      handling
                     </li>
                   </ul>
 
@@ -830,8 +774,8 @@ export default function IPv4OSIApp() {
                                 </Badge>
                                 <div className="text-sm">
                                   <span className="font-medium">{layer.name}</span>
-                                  {layer.isIPv4Layer && (
-                                    <span className="text-blue-600 dark:text-blue-400 ml-2">← IPv4 Header Added</span>
+                                  {layer.isIPv6Layer && (
+                                    <span className="text-blue-600 dark:text-blue-400 ml-2">← IPv6 Header Added</span>
                                   )}
                                 </div>
                               </div>
@@ -849,8 +793,8 @@ export default function IPv4OSIApp() {
                               </Badge>
                               <div className="text-sm">
                                 <span className="font-medium">{layer.name}</span>
-                                {layer.isIPv4Layer && (
-                                  <span className="text-blue-600 dark:text-blue-400 ml-2">← IPv4 Header Processed</span>
+                                {layer.isIPv6Layer && (
+                                  <span className="text-blue-600 dark:text-blue-400 ml-2">← IPv6 Header Processed</span>
                                 )}
                               </div>
                             </div>
@@ -864,7 +808,7 @@ export default function IPv4OSIApp() {
                 <Card className="border-blue-200 dark:border-blue-800">
                   <CardHeader>
                     <CardTitle className="text-blue-600 dark:text-blue-400">
-                      IPv4 Header Processing at Layer 3
+                      IPv6 Header Processing at Layer 3
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -873,21 +817,21 @@ export default function IPv4OSIApp() {
                         <h4 className="font-semibold">When Sending Data:</h4>
                         <ul className="list-disc list-inside space-y-1 text-sm">
                           <li>Layer 3 receives data from Layer 4 (Transport Layer)</li>
-                          <li>IPv4 header is added with source and destination IP addresses</li>
-                          <li>Routing decisions are made based on destination IP</li>
-                          <li>TTL is set to prevent infinite loops</li>
-                          <li>Fragmentation occurs if packet exceeds MTU</li>
+                          <li>IPv6 header is added with source and destination IPv6 addresses</li>
+                          <li>Flow Label is set for packets belonging to the same flow</li>
+                          <li>Hop Limit is set to prevent infinite loops</li>
+                          <li>Next Header field identifies the type of the following header</li>
                         </ul>
                       </div>
 
                       <div>
                         <h4 className="font-semibold">When Receiving Data:</h4>
                         <ul className="list-disc list-inside space-y-1 text-sm">
-                          <li>IPv4 header is examined for destination IP</li>
-                          <li>TTL is decremented and checked</li>
-                          <li>Header checksum is verified</li>
-                          <li>Fragments are reassembled if necessary</li>
-                          <li>Data is passed to Layer 4 based on Protocol field</li>
+                          <li>IPv6 header is examined for destination address</li>
+                          <li>Hop Limit is decremented and checked</li>
+                          <li>Flow Label is used to identify related packets</li>
+                          <li>Extension headers are processed if present</li>
+                          <li>Data is passed to Layer 4 based on Next Header field</li>
                         </ul>
                       </div>
                     </div>
@@ -897,9 +841,10 @@ export default function IPv4OSIApp() {
                 <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                   <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Key Takeaway</h4>
                   <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                    IPv4 is the backbone of internet communication at Layer 3, providing the addressing and routing
-                    mechanisms that allow data to travel across complex networks from source to destination. Every field
-                    in the IPv4 header serves a specific purpose in this process.
+                    IPv6 represents the future of internet addressing at Layer 3, providing the vastly expanded
+                    addressing and improved routing mechanisms needed for the continued growth of the internet. With its
+                    simplified header structure and advanced features like flow labeling, IPv6 is designed to support
+                    the next generation of internet applications and devices.
                   </p>
                 </div>
               </CardContent>
