@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Moon, Sun, Network, Layers, Info } from "lucide-react"
+import { Moon, Sun, Network, Layers, Info, BookOpen, Clock } from "lucide-react"
 
 interface IPv4Field {
   name: string
@@ -35,15 +35,17 @@ const ipv4Fields: IPv4Field[] = [
     name: "IHL",
     bits: "4 bits",
     description: "Internet Header Length",
-    purpose: "Specifies the length of the IP header in 32-bit words. Minimum value is 5 (20 bytes).",
-    example: "0101 (binary) = 5 words = 20 bytes",
+    purpose:
+      "Specifies the length of the IP header in 32-bit words (4-byte units). Minimum value is 5 (20 bytes) for a header with no options. Maximum is 15 (60 bytes).",
+    example: "5 = 20 bytes (no options), 8 = 32 bytes (12 bytes of options)",
   },
   {
     name: "Type of Service",
     bits: "8 bits",
-    description: "Quality of Service parameters",
-    purpose: "Defines the priority and type of service for the packet. Used for QoS routing decisions.",
-    example: "00000000 = Normal service",
+    description: "Type of Service (DSCP + ECN)",
+    purpose:
+      "Defines how the packet should be handled in terms of priority, delay, throughput, and reliability. First 6 bits are DSCP, last 2 bits are ECN.",
+    example: "00000000 = Normal service, 10111000 = Expedited Forwarding",
   },
   {
     name: "Total Length",
@@ -63,7 +65,7 @@ const ipv4Fields: IPv4Field[] = [
     name: "Flags",
     bits: "3 bits",
     description: "Control fragmentation",
-    purpose: "Controls packet fragmentation: Reserved bit, Don't Fragment (DF), More Fragments (MF).",
+    purpose: "Controls packet fragmentation: Reserved bit (must be 0), Don't Fragment (DF), More Fragments (MF).",
     example: "010 = Don't Fragment set",
   },
   {
@@ -111,9 +113,10 @@ const ipv4Fields: IPv4Field[] = [
   {
     name: "Options",
     bits: "0-40 bytes",
-    description: "Optional header fields",
-    purpose: "Variable-length field for additional IP options like source routing or timestamps.",
-    example: "Usually empty in most packets",
+    description: "Optional header fields with padding",
+    purpose:
+      "Variable-length field for additional IP options like source routing, timestamps, or security. Must be padded to ensure the header length is a multiple of 32 bits.",
+    example: "Usually empty in most packets. When present, often includes padding to align to 32-bit boundary.",
   },
 ]
 
@@ -194,12 +197,205 @@ export default function IPv4OSIApp() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="ipv4-header" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="story" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="story">The Story</TabsTrigger>
             <TabsTrigger value="ipv4-header">IPv4 Header</TabsTrigger>
             <TabsTrigger value="osi-model">OSI Model</TabsTrigger>
             <TabsTrigger value="integration">Integration</TabsTrigger>
           </TabsList>
+
+          {/* The Story Tab */}
+          <TabsContent value="story" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BookOpen className="h-6 w-6" />
+                  <span>The Birth of IPv4: A Story of Innovation</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="prose dark:prose-invert max-w-none">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-600">1970s - The Dawn of Internetworking</span>
+                    </div>
+                    <p className="text-sm leading-relaxed">
+                      In the early 1970s, computer networks were isolated islands. ARPANET connected a few universities,
+                      but there was no way for different networks to communicate with each other. The challenge was
+                      immense: how do you create a universal addressing system that could work across any type of
+                      network?
+                    </p>
+                  </div>
+
+                  <h3>The Problem: Connecting the Unconnectable</h3>
+                  <p>
+                    Imagine you're Vint Cerf and Bob Kahn in 1973, tasked with solving an impossible puzzle. You have:
+                  </p>
+                  <ul>
+                    <li>
+                      <strong>Different network technologies:</strong> Ethernet, radio networks, satellite links
+                    </li>
+                    <li>
+                      <strong>Varying packet sizes:</strong> Some networks could handle large packets, others couldn't
+                    </li>
+                    <li>
+                      <strong>Unreliable connections:</strong> Packets could get lost, duplicated, or arrive out of
+                      order
+                    </li>
+                    <li>
+                      <strong>No central authority:</strong> No single entity could control all networks
+                    </li>
+                  </ul>
+
+                  <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">The "Aha!" Moment</h4>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                      The breakthrough came with the realization that they needed a <strong>universal envelope</strong>{" "}
+                      - a standardized header that could carry any type of data across any type of network. This
+                      envelope would contain all the information needed to route data from any point A to any point B on
+                      the planet.
+                    </p>
+                  </div>
+
+                  <h3>Designing the Perfect Header: Every Bit Counts</h3>
+                  <p>
+                    The IPv4 header wasn't designed in a day. Each field was carefully crafted to solve specific
+                    problems:
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                    <Card className="border-blue-200 dark:border-blue-800">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-blue-600 dark:text-blue-400">
+                          The Addressing Challenge
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-sm">
+                        <p>
+                          <strong>Problem:</strong> How do you uniquely identify every computer on Earth?
+                        </p>
+                        <p>
+                          <strong>Solution:</strong> 32-bit addresses (Source & Destination IP) - enough for 4.3 billion
+                          unique addresses. In 1981, this seemed infinite!
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-green-200 dark:border-green-800">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-green-600 dark:text-green-400">
+                          The Fragmentation Dilemma
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-sm">
+                        <p>
+                          <strong>Problem:</strong> Different networks had different maximum packet sizes.
+                        </p>
+                        <p>
+                          <strong>Solution:</strong> Identification, Flags, and Fragment Offset fields - allowing large
+                          packets to be split and reassembled seamlessly.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-red-200 dark:border-red-800">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-red-600 dark:text-red-400">
+                          The Loop Prevention Problem
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-sm">
+                        <p>
+                          <strong>Problem:</strong> What if packets get stuck in routing loops forever?
+                        </p>
+                        <p>
+                          <strong>Solution:</strong> Time to Live (TTL) field - each router decrements this value, and
+                          when it reaches zero, the packet is discarded.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-purple-200 dark:border-purple-800">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-purple-600 dark:text-purple-400">
+                          The Protocol Multiplexing Need
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-sm">
+                        <p>
+                          <strong>Problem:</strong> How does the receiving computer know what type of data is inside?
+                        </p>
+                        <p>
+                          <strong>Solution:</strong> Protocol field - a simple number that identifies whether the
+                          payload is TCP, UDP, ICMP, or something else.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <h3>The Genius of Simplicity</h3>
+                  <p>
+                    What makes the IPv4 header brilliant isn't its complexity - it's its elegant simplicity. Consider
+                    these design decisions:
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <strong>Fixed 32-bit alignment:</strong> Every row in the header is exactly 32 bits wide, making
+                        it easy for computers to process efficiently.
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <strong>Variable header length:</strong> The IHL field allows for optional fields while keeping
+                        most headers compact at just 20 bytes.
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <strong>Future-proofing:</strong> The Version field allows for future IP versions (like IPv6)
+                        while maintaining backward compatibility.
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <strong>Error detection:</strong> The Header Checksum ensures that routing information isn't
+                        corrupted during transmission.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 dark:bg-green-950 p-6 rounded-lg border border-green-200 dark:border-green-800 mt-6">
+                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3">
+                      The Legacy: 50+ Years and Counting
+                    </h4>
+                    <p className="text-green-700 dark:text-green-300 text-sm leading-relaxed">
+                      Published as RFC 791 in September 1981, the IPv4 header design has remained virtually unchanged
+                      for over 40 years. It has successfully routed trillions of packets across billions of devices,
+                      enabling the global internet as we know it today. The fact that a protocol designed when the
+                      entire internet had fewer than 1,000 computers still powers our modern world of smartphones, IoT
+                      devices, and cloud computing is a testament to the brilliance of its original design.
+                    </p>
+                  </div>
+
+                  <h3>What's Next?</h3>
+                  <p>
+                    Now that you understand the story behind IPv4, let's explore the header structure in detail. Each
+                    field you'll see was carefully designed to solve real problems that the internet's pioneers faced.
+                    As you hover over each field in the interactive diagram, remember: you're not just looking at bits
+                    and bytes - you're seeing the DNA of the modern internet.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* IPv4 Header Tab */}
           <TabsContent value="ipv4-header" className="space-y-6">
@@ -211,179 +407,235 @@ export default function IPv4OSIApp() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* IPv4 Header Visualization */}
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-blue-200 dark:border-blue-700">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold">IPv4 Packet Header (20-60 bytes)</h3>
-                      <p className="text-sm text-muted-foreground">Hover over each field for detailed information</p>
-                    </div>
+                  {/* IPv4 Header Visualization - Simplified */}
+                  <div className="lg:col-span-2">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                      <div className="text-center mb-6">
+                        <h3 className="text-lg font-semibold">IPv4 Packet Header</h3>
+                        <p className="text-sm text-muted-foreground">Click on any field to learn more</p>
+                        <div className="text-xs text-gray-500 mt-2">20 bytes minimum • 60 bytes maximum</div>
+                      </div>
 
-                    {/* Bit position indicators */}
-                    <div className="grid grid-cols-32 gap-px mb-2 text-xs text-center">
-                      {Array.from({ length: 32 }, (_, i) => (
-                        <div key={i} className="text-gray-500">
-                          {i % 8 === 0 ? i : ""}
+                      {/* Simplified Header Visualization */}
+                      <div className="space-y-2">
+                        {/* Row 1: Version, IHL, ToS, Total Length */}
+                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                          <div
+                            className="flex-none w-16 bg-blue-200 dark:bg-blue-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-blue-300 dark:hover:bg-blue-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Version")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Ver</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">4b</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-none w-16 bg-green-200 dark:bg-green-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-green-300 dark:hover:bg-green-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("IHL")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">IHL</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">4b</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-none w-24 bg-yellow-200 dark:bg-yellow-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-yellow-300 dark:hover:bg-yellow-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Type of Service")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Type of Service</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">8 bits</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-1 bg-purple-200 dark:bg-purple-800 flex items-center justify-center cursor-pointer hover:bg-purple-300 dark:hover:bg-purple-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Total Length")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Total Length</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">16 bits</div>
+                            </div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
 
-                    {/* Header fields visualization */}
-                    <div className="space-y-px">
-                      {/* Row 1: Version, IHL, Type of Service, Total Length */}
-                      <div className="grid grid-cols-32 gap-px">
-                        {/* Version - 4 bits */}
-                        <div
-                          className="col-span-4 bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Version")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Ver
+                        {/* Row 2: Identification, Flags, Fragment Offset */}
+                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                          <div
+                            className="flex-1 bg-red-200 dark:bg-red-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-red-300 dark:hover:bg-red-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Identification")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Identification</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">16 bits</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-none w-20 bg-indigo-200 dark:bg-indigo-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-indigo-300 dark:hover:bg-indigo-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Flags")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Flags</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">3b</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-1 bg-pink-200 dark:bg-pink-800 flex items-center justify-center cursor-pointer hover:bg-pink-300 dark:hover:bg-pink-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Fragment Offset")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Fragment Offset</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">13 bits</div>
+                            </div>
+                          </div>
                         </div>
-                        {/* IHL - 4 bits */}
-                        <div
-                          className="col-span-4 bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("IHL")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          IHL
+
+                        {/* Row 3: TTL, Protocol, Header Checksum */}
+                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                          <div
+                            className="flex-none w-24 bg-teal-200 dark:bg-teal-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-teal-300 dark:hover:bg-teal-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Time to Live")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">TTL</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">8 bits</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-none w-24 bg-orange-200 dark:bg-orange-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Protocol")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Protocol</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">8 bits</div>
+                            </div>
+                          </div>
+                          <div
+                            className="flex-1 bg-cyan-200 dark:bg-cyan-800 flex items-center justify-center cursor-pointer hover:bg-cyan-300 dark:hover:bg-cyan-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Header Checksum")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Header Checksum</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">16 bits</div>
+                            </div>
+                          </div>
                         </div>
-                        {/* Type of Service - 8 bits */}
-                        <div
-                          className="col-span-8 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Type of Service")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Type of Service
+
+                        {/* Row 4: Source IP Address */}
+                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                          <div
+                            className="w-full bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center cursor-pointer hover:bg-emerald-300 dark:hover:bg-emerald-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Source IP Address")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-sm font-semibold">Source IP Address</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">
+                                32 bits • Example: 192.168.1.100
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        {/* Total Length - 16 bits */}
-                        <div
-                          className="col-span-16 bg-purple-100 dark:bg-purple-900 border border-purple-300 dark:border-purple-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Total Length")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Total Length
+
+                        {/* Row 5: Destination IP Address */}
+                        <div className="flex h-12 rounded-md overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+                          <div
+                            className="w-full bg-violet-200 dark:bg-violet-800 flex items-center justify-center cursor-pointer hover:bg-violet-300 dark:hover:bg-violet-700 transition-colors"
+                            onMouseEnter={() => setHoveredField("Destination IP Address")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-sm font-semibold">Destination IP Address</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-300">32 bits • Example: 8.8.8.8</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 6: Options (Optional) */}
+                        <div className="flex h-10 rounded-md overflow-hidden border-2 border-dashed border-gray-400 dark:border-gray-500 opacity-75">
+                          <div
+                            className="w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            onMouseEnter={() => setHoveredField("Options")}
+                            onMouseLeave={() => setHoveredField(null)}
+                          >
+                            <div className="text-center">
+                              <div className="text-xs font-semibold">Options + Padding (Optional)</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">0-40 bytes • Rarely used</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Row 2: Identification, Flags, Fragment Offset */}
-                      <div className="grid grid-cols-32 gap-px">
-                        {/* Identification - 16 bits */}
-                        <div
-                          className="col-span-16 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Identification")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Identification
-                        </div>
-                        {/* Flags - 3 bits */}
-                        <div
-                          className="col-span-3 bg-indigo-100 dark:bg-indigo-900 border border-indigo-300 dark:border-indigo-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Flags")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Flags
-                        </div>
-                        {/* Fragment Offset - 13 bits */}
-                        <div
-                          className="col-span-13 bg-pink-100 dark:bg-pink-900 border border-pink-300 dark:border-pink-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-pink-200 dark:hover:bg-pink-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Fragment Offset")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Fragment Offset
-                        </div>
-                      </div>
-
-                      {/* Row 3: TTL, Protocol, Header Checksum */}
-                      <div className="grid grid-cols-32 gap-px">
-                        {/* TTL - 8 bits */}
-                        <div
-                          className="col-span-8 bg-teal-100 dark:bg-teal-900 border border-teal-300 dark:border-teal-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-teal-200 dark:hover:bg-teal-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Time to Live")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          TTL
-                        </div>
-                        {/* Protocol - 8 bits */}
-                        <div
-                          className="col-span-8 bg-orange-100 dark:bg-orange-900 border border-orange-300 dark:border-orange-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-orange-200 dark:hover:bg-orange-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Protocol")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Protocol
-                        </div>
-                        {/* Header Checksum - 16 bits */}
-                        <div
-                          className="col-span-16 bg-cyan-100 dark:bg-cyan-900 border border-cyan-300 dark:border-cyan-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-cyan-200 dark:hover:bg-cyan-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Header Checksum")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Header Checksum
-                        </div>
-                      </div>
-
-                      {/* Row 4: Source IP Address */}
-                      <div className="grid grid-cols-32 gap-px">
-                        <div
-                          className="col-span-32 bg-emerald-100 dark:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-emerald-200 dark:hover:bg-emerald-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Source IP Address")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Source IP Address (32 bits)
-                        </div>
-                      </div>
-
-                      {/* Row 5: Destination IP Address */}
-                      <div className="grid grid-cols-32 gap-px">
-                        <div
-                          className="col-span-32 bg-violet-100 dark:bg-violet-900 border border-violet-300 dark:border-violet-700 p-2 text-center text-xs font-medium cursor-pointer hover:bg-violet-200 dark:hover:bg-violet-800 transition-colors"
-                          onMouseEnter={() => setHoveredField("Destination IP Address")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Destination IP Address (32 bits)
-                        </div>
-                      </div>
-
-                      {/* Row 6: Options */}
-                      <div className="grid grid-cols-32 gap-px">
-                        <div
-                          className="col-span-32 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 p-2 text-center text-xs font-medium cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                          onMouseEnter={() => setHoveredField("Options")}
-                          onMouseLeave={() => setHoveredField(null)}
-                        >
-                          Options (0-40 bytes, variable length)
+                      {/* Visual Legend */}
+                      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-1">
+                              <div className="w-3 h-3 bg-blue-200 dark:bg-blue-800 rounded"></div>
+                              <span>Control Fields</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <div className="w-3 h-3 bg-emerald-200 dark:bg-emerald-800 rounded"></div>
+                              <span>Addressing</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <div className="w-3 h-3 bg-red-200 dark:bg-red-800 rounded"></div>
+                              <span>Fragmentation</span>
+                            </div>
+                          </div>
+                          <div className="text-xs">Total: 20-60 bytes</div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Field Details */}
-                  {hoveredField && (
-                    <Card className="border-2 border-blue-500">
-                      <CardContent className="pt-6">
-                        {(() => {
-                          const field = ipv4Fields.find((f) => f.name === hoveredField)
-                          return field ? (
-                            <div className="space-y-3">
+                  {/* Field Explanations - Always Visible */}
+                  <div className="lg:col-span-1">
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                      <h3 className="text-lg font-semibold mb-4">Field Explanations</h3>
+                      {ipv4Fields.map((field) => (
+                        <Card
+                          key={field.name}
+                          className={`transition-all duration-200 ${
+                            hoveredField === field.name
+                              ? "border-2 border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-lg scale-105"
+                              : "border border-gray-200 dark:border-gray-700"
+                          }`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="space-y-2">
                               <div className="flex items-center space-x-2">
-                                <Badge variant="outline">{field.bits}</Badge>
-                                <h4 className="text-lg font-semibold">{field.name}</h4>
+                                <Badge variant="outline" className="text-xs">
+                                  {field.bits}
+                                </Badge>
+                                <h4 className="font-semibold text-sm">{field.name}</h4>
                               </div>
-                              <p className="text-sm text-muted-foreground">{field.description}</p>
-                              <p>{field.purpose}</p>
+                              <p className="text-xs text-muted-foreground">{field.description}</p>
+                              <p className="text-xs">{field.purpose}</p>
                               {field.example && (
-                                <div className="bg-muted p-3 rounded-md">
-                                  <p className="text-sm">
+                                <div className="bg-muted p-2 rounded-md">
+                                  <p className="text-xs">
                                     <strong>Example:</strong> {field.example}
                                   </p>
                                 </div>
                               )}
                             </div>
-                          ) : null
-                        })()}
-                      </CardContent>
-                    </Card>
-                  )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
