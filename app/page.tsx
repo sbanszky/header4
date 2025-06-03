@@ -167,7 +167,7 @@ const osiLayers: OSILayer[] = [
 ]
 
 export default function IPv4OSIApp() {
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(true)
   const [hoveredField, setHoveredField] = useState<string | null>(null)
   const [hoveredLayer, setHoveredLayer] = useState<number | null>(null)
 
@@ -188,6 +188,16 @@ export default function IPv4OSIApp() {
             <div className="flex items-center space-x-2">
               <Network className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold">IPv4 & OSI Model Explorer</h1>
+            </div>
+            <div className="flex-1 flex justify-center">
+              <a
+                href="https://subnetting.online"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-600 hover:text-purple-600 font-semibold transition-colors"
+              >
+                subnetting.online
+              </a>
             </div>
             <Button variant="outline" size="icon" onClick={toggleTheme} className="ml-auto">
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -647,14 +657,33 @@ export default function IPv4OSIApp() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Layers className="h-6 w-6" />
-                  <span>OSI Model - 7 Layers</span>
+                  <span>
+                    <a
+                      href="https://osimodel.subnetting.online"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      OSI Model
+                    </a>{" "}
+                    - 7 Layers
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <p className="text-muted-foreground">
-                    The Open Systems Interconnection (OSI) model is a conceptual framework that describes how network
-                    protocols interact and work together to provide network services.
+                    The Open Systems Interconnection (
+                    <a
+                      href="https://osimodel.subnetting.online"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      OSI model
+                    </a>
+                    ) is a conceptual framework that describes how network protocols interact and work together to
+                    provide network services.
                   </p>
 
                   <div className="grid gap-2">
@@ -711,15 +740,44 @@ export default function IPv4OSIApp() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Info className="h-6 w-6" />
-                  <span>IPv4 Integration with OSI Model</span>
+                  <span>
+                    IPv4 Integration with{" "}
+                    <a
+                      href="https://osimodel.subnetting.online"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      OSI Model
+                    </a>
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="prose dark:prose-invert max-w-none">
-                  <h3>How IPv4 Fits into the OSI Model</h3>
+                  <h3>
+                    How IPv4 Fits into the{" "}
+                    <a
+                      href="https://osimodel.subnetting.online"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      OSI Model
+                    </a>
+                  </h3>
                   <p>
-                    IPv4 operates at <strong>Layer 3 (Network Layer)</strong> of the OSI model. This layer is
-                    responsible for logical addressing, routing, and path determination across multiple networks.
+                    IPv4 operates at <strong>Layer 3 (Network Layer)</strong> of the{" "}
+                    <a
+                      href="https://osimodel.subnetting.online"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      OSI model
+                    </a>
+                    . This layer is responsible for logical addressing, routing, and path determination across multiple
+                    networks.
                   </p>
 
                   <h4>Key Functions of IPv4 at Layer 3:</h4>
@@ -739,7 +797,18 @@ export default function IPv4OSIApp() {
                     </li>
                   </ul>
 
-                  <h4>Data Flow Through OSI Layers:</h4>
+                  <h4>
+                    Data Flow Through{" "}
+                    <a
+                      href="https://osimodel.subnetting.online"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      OSI
+                    </a>{" "}
+                    Layers:
+                  </h4>
                 </div>
 
                 <div className="bg-muted p-6 rounded-lg">
