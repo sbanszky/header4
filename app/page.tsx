@@ -159,11 +159,8 @@ export default function IPv6OSIApp() {
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Network className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold">IPv6 & OSI Model Explorer</h1>
-            </div>
+          <div className="flex justify-between items-center mb-2">
+            <div></div>
             <div className="flex-1 flex justify-center">
               <a
                 href="https://subnetting.online"
@@ -177,6 +174,10 @@ export default function IPv6OSIApp() {
             <Button variant="outline" size="icon" onClick={toggleTheme} className="ml-auto">
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Network className="h-8 w-8 text-blue-600" />
+            <h1 className="text-2xl font-bold">IPv6 & OSI Model Explorer</h1>
           </div>
         </div>
       </header>
